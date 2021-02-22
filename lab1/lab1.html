@@ -1,0 +1,132 @@
+<html>
+  <head>
+    <style>
+      body {
+        margin 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+
+    import * as THREE from "https://web.cs.manchester.ac.uk/three/three.js-master/build/three.module.js";
+    var camera, scene, renderer;
+    var geometry, mesh, material, uniforms;
+    var clock = 0.0;
+    function start(){
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      /*
+        QUESTION 1
+        75 is the field of view for the camera (the cone of vision)
+        window.innerWidth / window.innerHeight denotes the aspect ratio of the image which in this case is a calculated value
+        the final two values are the near and far values which denotes the lengths at which the camera can see
+        the near value (0.1) means everything closer than 0.1 is omitted
+        the far value (1000) means everything further than 1000 is omitted (this is done so less irrelevant detail is rendered which would affect performance)
+        QUESTION 2
+        The camera only renders objects between near and far (0.1 and 1000 respectively) which are within the field of view
+        so if you move your bounds of rendering, different objects will or wont be rendered
+        If you shrink your FOV, the object will appear bigger as it takes up more of your FOV, which you now have less of.
+        If you change your aspect ratio the image will appear stretched or shrunk
+      */
+      camera.position.z = 5;
+      /*
+        QUESTION 3
+        This line sets the z coordinate of the camera, essentially moving along the z axis in the scene
+        The default position of objects is 0,0,0 so the z coordinate being changed moves it back so it can see the box properly
+        QUESTION 4
+        Decreasing the value makes the box look larger as the relative position becomes smaller. The reverse happens for increasing values
+        Increase the values also makes the edges less well defined as the smaller object has less resolution to draw straight lines with
+      */
+      renderer = new THREE.WebGLRenderer();
+      renderer.setClearColor(0x000000, 1.0);
+      /*
+        QUESTION 5
+        renderer.setClearColor(0x000000, 1.0); This line defines the colour of undefined colours
+        This means that everything which doesnt have a colour set such as the background to the scene gets set to 0x000000
+        which is hex for black
+        1.0 is the opacity and in this case it is set such that the background is not opaque
+        QUESTION 6
+        Changing 0x000000 means you can set the background to what ever colour you want E.G 0xFF0000 is red
+        Changing 1.0 has no effect on the background, but would change how opaque non textured objects are
+      */
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      /*
+        QUESTION 7
+        Changing these values will change the 'screen size'
+        essentially this changes the size of the viewing window
+      */
+      document.body.appendChild(renderer.domElement);
+      shaderCube();
+
+    }
+    function shaderCube(){
+      uniforms = {
+        time: {type: 'float', value: clock}
+      }
+      geometry = new THREE.BoxGeometry(2,1,1);
+      /*
+        QUESTION 8
+        Changing these parameters will change the length of each edge of the box
+        the parameters are x,y,z respectively
+      */
+      material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        fragmentShader: fragmentShader(),
+        vertexShader: vertexShader()
+      });
+      mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+    }
+    function fragmentShader(){
+      /*
+        This function needs editing to change the cubiods colour
+        changing gl_FragColor will change who the render colours fragments
+      */
+      return `
+        uniform float time;
+        varying vec3 vposInterpolated;
+        void main() {
+        gl_FragColor = vec4(vposInterpolated, 1.0);
+        }
+      `
+    }
+    function vertexShader(){
+      return `
+        uniform float time;
+        vec4 p;
+        varying vec3 vposInterpolated;
+        void main() {
+          p = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          gl_Position= p;
+          vposInterpolated= p.xyz;
+        }
+      `
+    }
+    function animate(){
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+      clock += 0.01;
+      uniforms.time.value = (Math.sin(clock)+1.0)/2.0;
+      mesh.rotation.x += 0.011;
+      mesh.rotation.y += 0.013;
+      /*
+        QUESTION 9
+        changing the rotation values for x and y will change the speed of rotation
+        increasing these number will have the desired effect
+      */
+
+    }
+    try{
+      start();
+      animate();
+    } catch (err){
+      alert(err.message);
+    }
+
+  </script>
+  </body>
+
+
+</html>
