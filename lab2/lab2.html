@@ -1,0 +1,116 @@
+<html>
+  <head>
+    <style>
+      body {
+        margin 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "https://web.cs.manchester.ac.uk/three/three.js-master/build/three.module.js";
+      import { OrbitControls } from "https://web.cs.manchester.ac.uk/three/three.js-master/examples/jsm/controls/OrbitControls.js";
+      var camera, scene, renderer;
+      var geometry, mesh, material, uniforms;
+      var NUM_LORENZ = 2;
+      var clock = 0.0;
+      var LorenzLine = new Array(NUM_LORENZ);
+      var LorenzSphere = new Array(NUM_LORENZ);
+      var LorenzGeometry = new Array(NUM_LORENZ);
+      var LorenzMaterial = new Array(NUM_LORENZ);
+      var SphereGeometry = new Array(NUM_LORENZ);
+      var SphereMaterial = new Array(NUM_LORENZ);
+      var Lorenz = new Array(NUM_LORENZ);
+      var LorenzColours = new Array(0x00FF00, 0xff0000);
+      var SphereColours = new Array(0x00FF00, 0xff0000);
+      var x = new Array(NUM_LORENZ),
+          y = new Array(NUM_LORENZ),
+          z = new Array(NUM_LORENZ),
+          a = new Array(NUM_LORENZ),
+          b = new Array(NUM_LORENZ),
+          c = new Array(NUM_LORENZ);
+      x = [0.01, -0.01];
+      y = [0.01, -0.01];
+      z = [0.01, -0.01];
+      a = [10.0, 10.0];
+      b = [28.0, 28.0];
+      c = [2.6, 2.6];
+      var dt= 0.01; // timestep.
+      var drawCount = [0,0]; // how many points added so far.
+      var MAXPOINTS= 150;
+      function init(){
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+        camera.position.set(0, 0, 100);
+        camera.lookAt(0,0,0);
+        renderer = new THREE.WebGLRenderer();
+        renderer.setClearColor(0x000000, 1.0);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+        var controls = new OrbitControls(camera, renderer.domElement);
+        controls.autoRotate = true;
+        for(var i=0; i < NUM_LORENZ; i++){
+          LorenzGeometry[i] = new THREE.BufferGeometry();
+          Lorenz[i] = new Float32Array(MAXPOINTS * 3);
+          Lorenz[i][0] = x[i];
+          Lorenz[i][1] = y[i];
+          Lorenz[i][2] = z[i];
+          LorenzGeometry[i].setAttribute('position', new THREE.BufferAttribute(Lorenz[i], 3));
+          LorenzGeometry[i].setDrawRange(1,2);
+          LorenzMaterial[i] = new THREE.LineBasicMaterial({ color: LorenzColours[i], linewidth: 1});
+          LorenzLine[i] = new THREE.Line(LorenzGeometry[i], LorenzMaterial[i]);
+          scene.add(LorenzLine[i]);
+          SphereGeometry[i] = new THREE.SphereGeometry(1, 32, 16);
+          SphereMaterial[i] = new THREE.MeshBasicMaterial({color: LorenzColours[i]});
+          LorenzSphere[i] = new THREE.Mesh(SphereGeometry[i], SphereMaterial[i]);
+          LorenzSphere[i].position.set(x[i], y[i], z[i]);
+          scene.add(LorenzSphere[i]);
+          drawCount[i] += 3;
+        }
+      }
+      function animate(){
+        requestAnimationFrame(animate);
+        update();
+        renderer.render(scene, camera);
+        clock += dt;
+      }
+      function remove(obj){
+        var removethis = scene.getObjectByName(obj.name);
+        scene.remove(removethis);
+      }
+      function update(){
+        //I tried to implement the reset, but couldnt get it working
+
+        for(var i = 0; i < NUM_LORENZ; i++){
+          var lpoints = LorenzLine[i].geometry.attributes.position.array;
+          // update the Lorenz velocities and co-ordinates
+          var xBar = a[i]*(lpoints[1] - lpoints[0]);
+          var yBar = (b[i]*lpoints[0]) - lpoints[1] - (lpoints[0]*lpoints[2])
+          var zBar = (-c[i] * lpoints[2]) + (lpoints[0]*lpoints[1])
+          var newLP = lpoints;
+          newLP[0] += xBar*dt;
+          newLP[1] += yBar*dt;
+          newLP[2] += zBar*dt;
+          // Update the position of the sphere to the newest point
+
+          LorenzSphere[i].position.set(newLP[0], newLP[1], newLP[2]);
+
+          // Add the newest point to the LorenzPoints array
+          lpoints[drawCount[i]+0] = newLP[0]
+          lpoints[drawCount[i]+1] = newLP[1]
+          lpoints[drawCount[i]+2] = newLP[2]
+          LorenzLine[i].geometry.setDrawRange(1, drawCount[i]/3);
+          LorenzLine[i].geometry.attributes.position.needsUpdate = true;
+          drawCount[i] += 3;
+        }
+      }
+      try{
+        init();
+        animate();
+      } catch (err){
+        alert(err.message);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,18 @@
+1.) Is Otsu’s method successful in thresholding all the images?
+Otsu's method is successful in thresholding some of the images but not all.
+The motorway image has been separated between foreground and background quite effectively.
+Using Otu's method on glaucoma.jpg shows that most of the blood vessels are mis-classified
+This is the same for the optic nerve head and the fundus images.
+I think this is because the lighting for all of the nerve and eye images is less uniform then the motorway image.
+The thresholding seems to focus on the lighter areas
+
+2.) How would you modify the thresholding algorithm to address any problems?
+Otsu's method works well, however it does not work for images with bad lighting.
+A solution would be to apply the thresholding algorithm to subsections of the image and then combine the results.
+This solves the uniformity issue, as if you take a subsection then the differences in lighting are much lower in the subsection than in the whole image
+
+3.) What metrics are there for assessing the success of thresholding?
+There are not many, as unless you have an output you wish to achieve, assessing the success is very difficult.
+Thresholding can be applied to solve many different problems, and to seperate different objects in an image, but until you know what you want to be seperating,
+then you measure how well it is doing. A solution to this is having a golden output to compare to, and measuring the success by calculating the mean squared error.
+However often, a golden output cannot be known.
